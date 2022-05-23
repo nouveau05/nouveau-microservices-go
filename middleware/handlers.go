@@ -366,9 +366,8 @@ func updateVenture(id int64, venture models.Venture) int64 {
 	return rowsaffected
 }
 
-// Create Connection
 
-// delete stock in the DB
+// delete venture from DB
 
 func deleteVenture(id int64) int64 {
 
