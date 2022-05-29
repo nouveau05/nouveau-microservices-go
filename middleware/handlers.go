@@ -341,7 +341,7 @@ func updateVenture(id int64, venture models.Venture) int64 {
 
 	// Create the update query
 
-	sqlStatement := `UPDATE venttures SET name=$2, domain=$3, revenue_estimation=$4`
+	sqlStatement := `UPDATE ventures SET name=$2, domain=$3, revenue_estimation=$4 WHERE ventureid=$1`
 
 	res, err := db.Exec(sqlStatement, id, venture.Name, venture.Domain, venture.Revenue)
 
