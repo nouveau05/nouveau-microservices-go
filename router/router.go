@@ -12,6 +12,8 @@ func Router() *mux.Router {
 
 	router := mux.NewRouter()
 
+	// Route information
+
 	router.HandleFunc("/api/venture/{id}", middleware.GetVenture).Methods("GET", "OPTIONS")
 	router.HandleFunc("/api/venture", middleware.GetAllVentures).Methods("GET", "OPTIONS")
 	router.HandleFunc("/api/newventure", middleware.CreateVenture).Methods("POST", "OPTIONS")
