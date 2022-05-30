@@ -1,9 +1,8 @@
 package router
 
 import (
-	"go-nouveau-postgres-api/middleware"
-
 	"github.com/gorilla/mux"
+	"github.com/nouveau05/nouveau-microservices-go/middleware"
 )
 
 // Router is exported and used in main.go

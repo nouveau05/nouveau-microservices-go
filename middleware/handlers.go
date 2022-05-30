@@ -4,15 +4,14 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"go-nouveau-postgres-api/models"
 	"log"
 	"net/http"
 	"os"
 	"strconv"
-
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+	"github.com/nouveau05/nouveau-microservices-go/models"
 )
 
 type response struct {
