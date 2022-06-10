@@ -83,13 +83,12 @@ func initSocketConnectionPool() (*sql.DB, error) {
 
 func createConnection() *sql.DB {
 
-	//load .env file
+	//load env file
 
-	err := godotenv.Load(".env")
-
+	err := godotenv.Load("env_file")
 	if err != nil {
 
-		log.Fatal("Error loading .env file")
+		log.Fatal("Error loading env_file file")
 	}
 
 	// db, err := sql.Open("postgres", os.Getenv("POSTGRES_URL"))
