@@ -85,11 +85,11 @@ func createConnection() *sql.DB {
 
 	//load env file
 
-	err := godotenv.Load("env_file")
-	if err != nil {
+	// err := godotenv.Load("env_file")
+	// if err != nil {
 
-		log.Fatal("Error loading env_file file")
-	}
+	// 	log.Fatal("Error loading env_file file")
+	// }
 
 	// db, err := sql.Open("postgres", os.Getenv("POSTGRES_URL"))
 	// //db, err = Open("mysql", "gorm:gorm@/gorm?charset=utf8&parseTime=True")
