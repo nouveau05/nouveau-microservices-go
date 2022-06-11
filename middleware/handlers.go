@@ -49,6 +49,66 @@ func configureConnectionPool(dbPool *sql.DB) {
 
 	// [END cloud_sql_mysql_databasesql_lifetime]
 }
+func initTCPConnectionPool() (*sql.DB, error) {
+	// [START cloud_sql_mysql_databasesql_create_tcp]
+	var (
+		dbUser    = mustGetenv("DB_USER") // e.g. 'my-db-user'
+		dbPwd     = mustGetenv("DB_PASS") // e.g. 'my-db-password'
+		dbTCPHost = mustGetenv("DB_HOST") // e.g. '127.0.0.1' ('172.17.0.1' if deployed to GAE Flex)
+		dbPort    = mustGetenv("DB_PORT") // e.g. '3306'
+		dbName    = mustGetenv("DB_NAME") // e.g. 'my-database'
+	)
+
+	dbURI := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", dbUser, dbPwd, dbTCPHost, dbPort, dbName)
+
+	// [START_EXCLUDE]
+	// [START cloud_sql_mysql_databasesql_sslcerts]
+	// (OPTIONAL) Configure SSL certificates
+	// For deployments that connect directly to a Cloud SQL instance without
+	// using the Cloud SQL Proxy, configuring SSL certificates will ensure the
+	// connection is encrypted. This step is entirely OPTIONAL.
+	// dbRootCert := os.Getenv("DB_ROOT_CERT") // e.g., '/path/to/my/server-ca.pem'
+	// if dbRootCert != "" {
+	// 	var (
+	// 		dbCert = mustGetenv("DB_CERT") // e.g. '/path/to/my/client-cert.pem'
+	// 		dbKey  = mustGetenv("DB_KEY")  // e.g. '/path/to/my/client-key.pem'
+	// 	)
+	// 	pool := x509.NewCertPool()
+	// 	pem, err := ioutil.ReadFile(dbRootCert)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	if ok := pool.AppendCertsFromPEM(pem); !ok {
+	// 		return nil, err
+	// 	}
+	// 	cert, err := tls.LoadX509KeyPair(dbCert, dbKey)
+	// 	if err != nil {
+	// 		return nil, err
+	// 	}
+	// 	mysql.RegisterTLSConfig("cloudsql", &tls.Config{
+	// 		RootCAs:               pool,
+	// 		Certificates:          []tls.Certificate{cert},
+	// 		InsecureSkipVerify:    true,
+	// 		VerifyPeerCertificate: verifyPeerCertFunc(pool),
+	// 	})
+	// 	dbURI += "&tls=cloudsql"
+	// }
+	// [END cloud_sql_mysql_databasesql_sslcerts]
+	// [END_EXCLUDE]
+
+	// dbPool is the pool of database connections.
+	dbPool, err := sql.Open("postgres", dbURI)
+	if err != nil {
+		return nil, fmt.Errorf("sql.Open: %v", err)
+	}
+
+	// [START_EXCLUDE]
+	configureConnectionPool(dbPool)
+	// [END_EXCLUDE]
+
+	return dbPool, nil
+	// [END cloud_sql_mysql_databasesql_create_tcp]
+}
 // initSocketConnectionPool initializes a Unix socket connection pool for
 // a Cloud SQL instance of SQL Server.
 func initSocketConnectionPool() (*sql.DB, error) {
@@ -82,20 +142,27 @@ func initSocketConnectionPool() (*sql.DB, error) {
 }
 
 func createConnection() *sql.DB {
+	var db *sql.DB
 
 	//load env file
-
-	// err := godotenv.Load("env_file")
-	// if err != nil {
-
-	// 	log.Fatal("Error loading env_file file")
-	// }
-
-	// db, err := sql.Open("postgres", os.Getenv("POSTGRES_URL"))
-	// //db, err = Open("mysql", "gorm:gorm@/gorm?charset=utf8&parseTime=True")
-	db, err := initSocketConnectionPool()
+	err := godotenv.Load("./env_file")
 	if err != nil {
-		panic(err)
+		log.Fatal("Error loading env_file file")
+	}
+
+	// //db, err = Open("mysql", "gorm:gorm@/gorm?charset=utf8&parseTime=True")
+	if os.Getenv("POSTGRES_URL") != "" {
+		db, err = sql.Open("postgres", os.Getenv("POSTGRES_URL"))
+	} else if os.Getenv("DB_HOST") != "" {
+		db, err = initTCPConnectionPool()
+		if err != nil {
+			log.Fatalf("initTCPConnectionPool: unable to connect: %v", err)
+		}
+	} else {
+		db, err = initSocketConnectionPool()
+		if err != nil {
+			log.Fatalf("initSocketConnectionPool: unable to connect: %v", err)
+		}
 	}
 
 	// Check the connection

@@ -1,3 +1,4 @@
+POSTGRES_URL="postgres://postgres:nouveau123@35.184.2.94:5432/venturesdb?sslmode=disable"
 DB_USER="postgres"
 DB_PASS="nouveau123"
 DB_NAME="venturesdb"
