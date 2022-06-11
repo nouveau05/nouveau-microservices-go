@@ -4,14 +4,16 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	// "io/ioutil"
 	"log"
 	"net/http"
 	"os"
-	"time"
+	// "time"
 	"strconv"
 	"github.com/gorilla/mux"
 	"github.com/joho/godotenv"
 	_ "github.com/lib/pq"
+	_ "github.com/jackc/pgx/v4/stdlib"
 	"github.com/nouveau05/nouveau-microservices-go/models"
 )
 
@@ -19,7 +21,16 @@ type response struct {
 	ID      int64  `json:"id,omitempty"`
 	Message string `json:"message,omitempty"`
 }
+// func printFiles() {
+// 	files, err := ioutil.ReadDir(".")
+//     if err != nil {
+//         log.Fatal(err)
+//     }
 
+//     for _, file := range files {
+//         log.Println(file.Name(), file.IsDir())
+//     }
+// }
 // mustGetEnv is a helper function for getting environment variables.
 // Displays a warning if the environment variable is not set.
 func mustGetenv(k string) string {
@@ -31,84 +42,84 @@ func mustGetenv(k string) string {
 }
 // configureConnectionPool sets database connection pool properties.
 // For more information, see https://golang.org/pkg/database/sql
-func configureConnectionPool(dbPool *sql.DB) {
-	// [START cloud_sql_mysql_databasesql_limit]
+// func configureConnectionPool(dbPool *sql.DB) {
+// 	// [START cloud_sql_mysql_databasesql_limit]
 
-	// Set maximum number of connections in idle connection pool.
-	dbPool.SetMaxIdleConns(5)
+// 	// Set maximum number of connections in idle connection pool.
+// 	dbPool.SetMaxIdleConns(5)
 
-	// Set maximum number of open connections to the database.
-	dbPool.SetMaxOpenConns(7)
+// 	// Set maximum number of open connections to the database.
+// 	dbPool.SetMaxOpenConns(7)
 
-	// [END cloud_sql_mysql_databasesql_limit]
+// 	// [END cloud_sql_mysql_databasesql_limit]
 
-	// [START cloud_sql_mysql_databasesql_lifetime]
+// 	// [START cloud_sql_mysql_databasesql_lifetime]
 
-	// Set Maximum time (in seconds) that a connection can remain open.
-	dbPool.SetConnMaxLifetime(1800 * time.Second)
+// 	// Set Maximum time (in seconds) that a connection can remain open.
+// 	dbPool.SetConnMaxLifetime(1800 * time.Second)
 
-	// [END cloud_sql_mysql_databasesql_lifetime]
-}
-func initTCPConnectionPool() (*sql.DB, error) {
-	// [START cloud_sql_mysql_databasesql_create_tcp]
-	var (
-		dbUser    = mustGetenv("DB_USER") // e.g. 'my-db-user'
-		dbPwd     = mustGetenv("DB_PASS") // e.g. 'my-db-password'
-		dbTCPHost = mustGetenv("DB_HOST") // e.g. '127.0.0.1' ('172.17.0.1' if deployed to GAE Flex)
-		dbPort    = mustGetenv("DB_PORT") // e.g. '3306'
-		dbName    = mustGetenv("DB_NAME") // e.g. 'my-database'
-	)
+// 	// [END cloud_sql_mysql_databasesql_lifetime]
+// }
+// func initTCPConnectionPool() (*sql.DB, error) {
+// 	// [START cloud_sql_mysql_databasesql_create_tcp]
+// 	var (
+// 		dbUser    = mustGetenv("DB_USER") // e.g. 'my-db-user'
+// 		dbPwd     = mustGetenv("DB_PASS") // e.g. 'my-db-password'
+// 		dbTCPHost = mustGetenv("DB_HOST") // e.g. '127.0.0.1' ('172.17.0.1' if deployed to GAE Flex)
+// 		dbPort    = mustGetenv("DB_PORT") // e.g. '3306'
+// 		dbName    = mustGetenv("DB_NAME") // e.g. 'my-database'
+// 	)
 
-	dbURI := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", dbUser, dbPwd, dbTCPHost, dbPort, dbName)
+// 	dbURI := fmt.Sprintf("%s:%s@tcp(%s:%s)/%s?parseTime=true", dbUser, dbPwd, dbTCPHost, dbPort, dbName)
 
-	// [START_EXCLUDE]
-	// [START cloud_sql_mysql_databasesql_sslcerts]
-	// (OPTIONAL) Configure SSL certificates
-	// For deployments that connect directly to a Cloud SQL instance without
-	// using the Cloud SQL Proxy, configuring SSL certificates will ensure the
-	// connection is encrypted. This step is entirely OPTIONAL.
-	// dbRootCert := os.Getenv("DB_ROOT_CERT") // e.g., '/path/to/my/server-ca.pem'
-	// if dbRootCert != "" {
-	// 	var (
-	// 		dbCert = mustGetenv("DB_CERT") // e.g. '/path/to/my/client-cert.pem'
-	// 		dbKey  = mustGetenv("DB_KEY")  // e.g. '/path/to/my/client-key.pem'
-	// 	)
-	// 	pool := x509.NewCertPool()
-	// 	pem, err := ioutil.ReadFile(dbRootCert)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// 	if ok := pool.AppendCertsFromPEM(pem); !ok {
-	// 		return nil, err
-	// 	}
-	// 	cert, err := tls.LoadX509KeyPair(dbCert, dbKey)
-	// 	if err != nil {
-	// 		return nil, err
-	// 	}
-	// 	mysql.RegisterTLSConfig("cloudsql", &tls.Config{
-	// 		RootCAs:               pool,
-	// 		Certificates:          []tls.Certificate{cert},
-	// 		InsecureSkipVerify:    true,
-	// 		VerifyPeerCertificate: verifyPeerCertFunc(pool),
-	// 	})
-	// 	dbURI += "&tls=cloudsql"
-	// }
-	// [END cloud_sql_mysql_databasesql_sslcerts]
-	// [END_EXCLUDE]
+// 	// [START_EXCLUDE]
+// 	// [START cloud_sql_mysql_databasesql_sslcerts]
+// 	// (OPTIONAL) Configure SSL certificates
+// 	// For deployments that connect directly to a Cloud SQL instance without
+// 	// using the Cloud SQL Proxy, configuring SSL certificates will ensure the
+// 	// connection is encrypted. This step is entirely OPTIONAL.
+// 	// dbRootCert := os.Getenv("DB_ROOT_CERT") // e.g., '/path/to/my/server-ca.pem'
+// 	// if dbRootCert != "" {
+// 	// 	var (
+// 	// 		dbCert = mustGetenv("DB_CERT") // e.g. '/path/to/my/client-cert.pem'
+// 	// 		dbKey  = mustGetenv("DB_KEY")  // e.g. '/path/to/my/client-key.pem'
+// 	// 	)
+// 	// 	pool := x509.NewCertPool()
+// 	// 	pem, err := ioutil.ReadFile(dbRootCert)
+// 	// 	if err != nil {
+// 	// 		return nil, err
+// 	// 	}
+// 	// 	if ok := pool.AppendCertsFromPEM(pem); !ok {
+// 	// 		return nil, err
+// 	// 	}
+// 	// 	cert, err := tls.LoadX509KeyPair(dbCert, dbKey)
+// 	// 	if err != nil {
+// 	// 		return nil, err
+// 	// 	}
+// 	// 	mysql.RegisterTLSConfig("cloudsql", &tls.Config{
+// 	// 		RootCAs:               pool,
+// 	// 		Certificates:          []tls.Certificate{cert},
+// 	// 		InsecureSkipVerify:    true,
+// 	// 		VerifyPeerCertificate: verifyPeerCertFunc(pool),
+// 	// 	})
+// 	// 	dbURI += "&tls=cloudsql"
+// 	// }
+// 	// [END cloud_sql_mysql_databasesql_sslcerts]
+// 	// [END_EXCLUDE]
 
-	// dbPool is the pool of database connections.
-	dbPool, err := sql.Open("postgres", dbURI)
-	if err != nil {
-		return nil, fmt.Errorf("sql.Open: %v", err)
-	}
+// 	// dbPool is the pool of database connections.
+// 	dbPool, err := sql.Open("postgres", dbURI)
+// 	if err != nil {
+// 		return nil, fmt.Errorf("sql.Open: %v", err)
+// 	}
 
-	// [START_EXCLUDE]
-	configureConnectionPool(dbPool)
-	// [END_EXCLUDE]
+// 	// [START_EXCLUDE]
+// 	configureConnectionPool(dbPool)
+// 	// [END_EXCLUDE]
 
-	return dbPool, nil
-	// [END cloud_sql_mysql_databasesql_create_tcp]
-}
+// 	return dbPool, nil
+// 	// [END cloud_sql_mysql_databasesql_create_tcp]
+// }
 // initSocketConnectionPool initializes a Unix socket connection pool for
 // a Cloud SQL instance of SQL Server.
 func initSocketConnectionPool() (*sql.DB, error) {
@@ -119,59 +130,72 @@ func initSocketConnectionPool() (*sql.DB, error) {
 		dbName                 = mustGetenv("DB_NAME")                  // e.g. 'my-database'
 		instanceConnectionName = mustGetenv("INSTANCE_CONNECTION_NAME") // e.g. 'project:region:instance'
 	)
+	log.Println("initSocketConnectionPool")
 
 	socketDir, isSet := os.LookupEnv("DB_SOCKET_DIR")
+	// if !isSet {
+	// 	socketDir = "/cloudsql"
+	// }
+
+	// dbURI := fmt.Sprintf("%s:%s@unix(/%s/%s)/%s??sslmode=disable", dbUser, dbPwd, socketDir, instanceConnectionName, dbName)
+
+	// log.Printf("dbURI: %v", dbURI)
+	// // dbPool is the pool of database connections.
+	// dbPool, err := sql.Open("postgres", dbURI)
+	// if err != nil {
+	// 	return nil, fmt.Errorf("sql.Open: %v", err)
+	// }
+
+	// // [START_EXCLUDE]
+	// configureConnectionPool(dbPool)
+	// // [END_EXCLUDE]
+
+	// socketDir, isSet := os.LookupEnv("DB_SOCKET_DIR")
 	if !isSet {
-		socketDir = "/cloudsql"
+			socketDir = "/cloudsql"
 	}
 
-	dbURI := fmt.Sprintf("%s:%s@unix(/%s/%s)/%s?parseTime=true", dbUser, dbPwd, socketDir, instanceConnectionName, dbName)
+	dbURI := fmt.Sprintf("user=%s password=%s database=%s host=%s/%s", dbUser, dbPwd, dbName, socketDir, instanceConnectionName)
 
 	// dbPool is the pool of database connections.
-	dbPool, err := sql.Open("postgres", dbURI)
+	db, err := sql.Open("pgx", dbURI)
 	if err != nil {
-		return nil, fmt.Errorf("sql.Open: %v", err)
+        return nil, fmt.Errorf("sql.Open: %v", err)
 	}
 
-	// [START_EXCLUDE]
-	configureConnectionPool(dbPool)
-	// [END_EXCLUDE]
 
-	return dbPool, nil
+	return db, nil
 	// [END cloud_sql_mysql_databasesql_create_socket]
 }
 
 func createConnection() *sql.DB {
 	var db *sql.DB
 
+	// printFiles()
 	//load env file
-	err := godotenv.Load("./env_file")
+	err := godotenv.Load("env_file", "/app/env_file")
 	if err != nil {
-		log.Fatal("Error loading env_file file")
+		log.Printf("Error loading env_file file. %v", err)
 	}
 
 	// //db, err = Open("mysql", "gorm:gorm@/gorm?charset=utf8&parseTime=True")
 	if os.Getenv("POSTGRES_URL") != "" {
 		db, err = sql.Open("postgres", os.Getenv("POSTGRES_URL"))
-	} else if os.Getenv("DB_HOST") != "" {
-		db, err = initTCPConnectionPool()
-		if err != nil {
-			log.Fatalf("initTCPConnectionPool: unable to connect: %v", err)
-		}
 	} else {
 		db, err = initSocketConnectionPool()
 		if err != nil {
 			log.Fatalf("initSocketConnectionPool: unable to connect: %v", err)
 		}
 	}
+	log.Println("initSocketConnectionPool connected ")
 
 	// Check the connection
-	err = db.Ping()
-	if err != nil {
+	// err = db.Ping()
+	// if err != nil {
 
-		panic(err)
+	// 	panic(err)
 
-	}
+	// }
 
 	fmt.Println("Successfully connected ")
 
