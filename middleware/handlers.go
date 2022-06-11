@@ -156,7 +156,7 @@ func initSocketConnectionPool() (*sql.DB, error) {
 	}
 
 	dbURI := fmt.Sprintf("user=%s password=%s database=%s host=%s/%s", dbUser, dbPwd, dbName, socketDir, instanceConnectionName)
-
+	log.Println(dbURI)
 	// dbPool is the pool of database connections.
 	db, err := sql.Open("pgx", dbURI)
 	if err != nil {
