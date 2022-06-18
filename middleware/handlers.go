@@ -4,7 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	// "io/ioutil"
+	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
@@ -21,16 +21,17 @@ type response struct {
 	ID      int64  `json:"id,omitempty"`
 	Message string `json:"message,omitempty"`
 }
-// func printFiles() {
-// 	files, err := ioutil.ReadDir(".")
-//     if err != nil {
-//         log.Fatal(err)
-//     }
+func printFiles(d string) {
+	log.Println("Current path:", d)
+	files, err := ioutil.ReadDir(d)
+    if err != nil {
+        log.Fatal(err)
+    }
 
-//     for _, file := range files {
-//         log.Println(file.Name(), file.IsDir())
-//     }
-// }
+    for _, file := range files {
+        log.Println(file.Name(), file.IsDir())
+    }
+}
 // mustGetEnv is a helper function for getting environment variables.
 // Displays a warning if the environment variable is not set.
 func mustGetenv(k string) string {
@@ -171,9 +172,10 @@ func initSocketConnectionPool() (*sql.DB, error) {
 func createConnection() *sql.DB {
 	var db *sql.DB
 
-	// printFiles()
+	printFiles("./app")
+	printFiles("./app/ui")
 	//load env file
-	err := godotenv.Load("env_file", "/app/env_file")
+	err := godotenv.Load("./app/env_file", "/app/env_file")
 	if err != nil {
 		log.Printf("Error loading env_file file. %v", err)
 	}

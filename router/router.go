@@ -64,7 +64,7 @@ func Router() *mux.Router {
 	router.HandleFunc("/api/venture/{id}", middleware.DeleteVenture).Methods("DELETE", "OPTIONS")
 
 	// static files
-	spa := spaHandler{staticPath: "ui", indexPath: "index.html"}
+	spa := spaHandler{staticPath: "app/ui", indexPath: "index.html"}
 	router.PathPrefix("/").Handler(spa)
 
 	return router
